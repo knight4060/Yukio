@@ -5,11 +5,11 @@ from flask import Flask
 import threading
 
 # Tokenni Render/GitHub orqali xavfsiz ulaymiz
-BOT_TOKEN = os.environ.get('8672811538:AAHpljd5gT0NgC2U606C9skBpplVWaty0qw')
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 PREMIUM_KEY = "YUKIO-JDSA-11NI-ADKP-MOAS-7777"
-SAYT_LINKI = "https://knight4060.github.io/website-/" 
+SAYT_LINKI = "https://o_zingizning_github_username.github.io/yukio-hub/" 
 
 app = Flask('')
 
@@ -21,79 +21,108 @@ def run_flask():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# Eski xabarni o'chirish va yangisini yuborish funksiyasi
-def send_clean_message(chat_id, text, reply_markup=None, parse_mode="Markdown"):
-    # Oldingi xabarni o'chirishga harakat qiladi
-    try:
-        # Foydalanuvchining oxirgi yuborgan xabaridan bitta oldingisini o'chiradi
-        # Bu orqali faqat bitta faol xabar qoladi
-        pass 
-    except:
-        parent = None
+# Eski xabarlarni tozalab, faqat bitta toza xabar qoldirish funksiyasi
+last_bot_messages = {}
 
-    msg = bot.send_message(chat_id, text, parse_mode=parse_mode, reply_markup=reply_markup)
+def send_clean_message(chat_id, text, reply_markup=None):
+    # Oldingi bot xabarini o'chirishga harakat qiladi
+    if chat_id in last_bot_messages:
+        try:
+            bot.delete_message(chat_id, last_bot_messages[chat_id])
+        except:
+            pass
+            
+    msg = bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=reply_markup)
+    last_bot_messages[chat_id] = msg.message_id
     return msg
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    # Foydalanuvchi yuborgan buyruq xabarini o'chirib tashlaymiz
+    chat_id = message.chat.id
+    # Foydalanuvchi yuborgan buyruqni o'chiramiz
     try:
-        bot.delete_message(message.chat.id, message.message_id)
+        bot.delete_message(chat_id, message.message_id)
     except:
         pass
 
     welcome_text = (
         f"🌸 *Welcome to Yukio Hub | Software Service* 🌸\n\n"
         f"Hello, {message.from_user.first_name}!\n"
-        f"Get your Premium License Keys and unlock high-tier script modules execution.\n\n"
-        f"💬 *To get the Premium Key, please send the special verification code:* `449`"
+        f"Unlock high-tier elite script modules execution right now.\n\n"
+        f"💎 *Premium License Key Price:* 449 ⭐ (Telegram Stars)\n"
+        f"Click the button below to secure your transaction and claim your key instantly."
     )
     
     markup = types.InlineKeyboardMarkup(row_width=1)
+    # Telegram Stars to'lov tugmasi
+    btn_pay = types.InlineKeyboardButton("💳 Pay 449 Stars", callback_data="buy_premium_stars")
     btn_site = types.InlineKeyboardButton("🌐 Access Official Website", url=SAYT_LINKI)
-    markup.add(btn_site)
+    markup.add(btn_pay, btn_site)
     
-    send_clean_message(message.chat.id, welcome_text, reply_markup=markup)
+    send_clean_message(chat_id, welcome_text, reply_markup=markup)
 
-# Maxsus "449" kodini tekshirish matnli xabarlar uchun
-@bot.message_handler(func=lambda message: True)
-def handle_text_messages(message):
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    chat_id = call.message.chat.id
+    
+    if call.data == "buy_premium_stars":
+        # Telegram Stars uchun Invoice (Invoys) shakllantiramiz
+        try:
+            bot.send_invoice(
+                chat_id=chat_id,
+                title="Yukio Hub Premium Key",
+                description="Instant lifetime access code for Sakura Premium modules.",
+                invoice_payload="yukio_premium_payload",
+                provider_token="", # Telegram Stars uchun bu joy bo'sh qolishi Shart!
+                currency="XTR",    # XTR - Telegram Stars valyutasi kodi
+                prices=[types.LabeledPrice(label="Premium Key", amount=449)] # 449 Stars
+            )
+            # Invoys yuborilgach, uning ortidagi eski xabarni tozalaymiz
+            if chat_id in last_bot_messages:
+                try:
+                    bot.delete_message(chat_id, last_bot_messages[chat_id])
+                except:
+                    pass
+        except Exception as e:
+            print(f"Invoice error: {e}")
+
+# TO'LOV OLDIDAN TEKSHIRUV (Pre-checkout query)
+@bot.pre_checkout_query_handler(func=lambda query: True)
+def checkout(pre_checkout_query):
+    # To'lov oynasi ochilganda unga tasdiq javobini qaytaramiz (Ok)
+    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+# TO'LOV MUVAFFAQIYATLI YAKUNLANGANDA (Successful Payment)
+@bot.message_handler(content_types=['successful_payment'])
+def got_payment(message):
     chat_id = message.chat.id
-    user_input = message.text.strip()
-
-    # Foydalanuvchi yozgan xabarni darhol o'chiramiz (chat toza turishi uchun)
+    
+    # To'lov haqidagi xabarni va foydalanuvchi chekini darhol o'chiramiz chat toza turishi uchun
     try:
         bot.delete_message(chat_id, message.message_id)
     except:
         pass
 
-    # Kodni tekshirish (Agar 449 yoki *** kabi yulduzchalar bo'lsa ham)
-    if user_input == "449" or "449" in user_input:
-        success_text = (
-            f"✨ *Premium Authorization Granted!* ✨\n\n"
-            f"🔑 *Your Premium License Key:*\n"
-            f"`{PREMIUM_KEY}`\n\n"
-            f"📌 *How to use it?*\n"
-            f"1. Open our official website.\n"
-            f"2. Navigate to the *Premium* sector.\n"
-            f"3. Paste the key above and click *Verify Authorization*."
-        )
-        markup = types.InlineKeyboardMarkup().add(
-            types.InlineKeyboardButton("🌐 Open Website", url=SAYT_LINKI)
-        )
-        send_clean_message(chat_id, success_text, reply_markup=markup)
-    else:
-        # Noto'g'ri kod kiritilganda inglizcha ogohlantirish
-        error_text = (
-            f"❌ *Invalid Access Code!*\n\n"
-            f"The code you entered is incorrect. Please send the valid code (`449`) to claim your Premium Key."
-        )
-        send_clean_message(chat_id, error_text)
+    success_text = (
+        f"✨ *Payment Successful! Authorization Granted!* ✨\n\n"
+        f"🔑 *Your Premium License Key:*\n"
+        f"`{PREMIUM_KEY}`\n\n"
+        f"📌 *How to use it?*\n"
+        f"1. Open our official website.\n"
+        f"2. Navigate to the *Premium* sector.\n"
+        f"3. Paste the key above and click *Verify Authorization*.\n\n"
+        f"Thank you for supporting Yukio Hub! 🌸"
+    )
+    
+    markup = types.InlineKeyboardMarkup().add(
+        types.InlineKeyboardButton("🌐 Open Website", url=SAYT_LINKI)
+    )
+    send_clean_message(chat_id, success_text, reply_markup=markup)
 
 if __name__ == "__main__":
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
     
-    print("Web server secure. Bot starting polling...")
+    print("Stars Payment Server online. Bot polling starting...")
     bot.infinity_polling(none_stop=True)
