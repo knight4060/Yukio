@@ -5,13 +5,13 @@ from flask import Flask
 import threading
 
 # Tokenni Render orqali xavfsiz ulaymiz
-BOT_TOKEN = os.environ.get('8672811538:AAHpljd5gT0NgC2U606C9skBpplVWaty0qw')
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 PREMIUM_KEY = "YUKIO-JDSA-11NI-ADKP-MOAS-7777"
-SAYT_LINKI = "https://knight4060.github.io/website-/" 
+SAYT_LINKI = "https://o_zingizning_github_username.github.io/yukio-hub/" 
 
-# Render o'chirib qo'ymasligi uchun soxta veb-server yaratamiz
+# Render o'chirib qo'ymasligi uchun Flask server
 app = Flask('')
 
 @app.route('/')
@@ -19,7 +19,9 @@ def home():
     return "Bot 24/7 rejimda muvaffaqiyatli ishlamoqda!"
 
 def run_flask():
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    # Render talab qiladigan PORT sozlamasi
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -58,10 +60,13 @@ def callback_inline(call):
             )
         )
 
-# Botni alohida oqimda (thread) ishga tushiramiz
 if __name__ == "__main__":
-    t = threading.Thread(target=run_flask)
-    t.start()
+    # 1. Birinchi bo'lib Render kutayotgan Web-serverni yoqamiz
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
     
-    print("Yukio Bot ishga tushdi...")
+    print("Web server muvaffaqiyatli portni egalladi. Bot ishga tushmoqda...")
+    
+    # 2. Keyin botni cheksiz aylanmaga qo'yamiz
     bot.infinity_polling(none_stop=True)
