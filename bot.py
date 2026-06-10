@@ -5,11 +5,11 @@ from flask import Flask
 import threading
 
 # Tokenni Render orqali xavfsiz ulaymiz
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+BOT_TOKEN = os.environ.get('8672811538:AAHpljd5gT0NgC2U606C9skBpplVWaty0qw')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 PREMIUM_KEY = "YUKIO-JDSA-11NI-ADKP-MOAS-7777"
-SAYT_LINKI = "https://o_zingizning_github_username.github.io/yukio-hub/" 
+SAYT_LINKI = "https://knight4060.github.io/website-/" 
 
 # Render o'chirib qo'ymasligi uchun Flask server
 app = Flask('')
