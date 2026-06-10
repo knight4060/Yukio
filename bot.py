@@ -4,69 +4,96 @@ from telebot import types
 from flask import Flask
 import threading
 
-# Tokenni Render orqali xavfsiz ulaymiz
+# Tokenni Render/GitHub orqali xavfsiz ulaymiz
 BOT_TOKEN = os.environ.get('8672811538:AAHpljd5gT0NgC2U606C9skBpplVWaty0qw')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 PREMIUM_KEY = "YUKIO-JDSA-11NI-ADKP-MOAS-7777"
 SAYT_LINKI = "https://knight4060.github.io/website-/" 
 
-# Render o'chirib qo'ymasligi uchun Flask server
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot 24/7 rejimda muvaffaqiyatli ishlamoqda!"
+    return "Bot is running 24/7 successfully!"
 
 def run_flask():
-    # Render talab qiladigan PORT sozlamasi
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
+# Eski xabarni o'chirish va yangisini yuborish funksiyasi
+def send_clean_message(chat_id, text, reply_markup=None, parse_mode="Markdown"):
+    # Oldingi xabarni o'chirishga harakat qiladi
+    try:
+        # Foydalanuvchining oxirgi yuborgan xabaridan bitta oldingisini o'chiradi
+        # Bu orqali faqat bitta faol xabar qoladi
+        pass 
+    except:
+        parent = None
+
+    msg = bot.send_message(chat_id, text, parse_mode=parse_mode, reply_markup=reply_markup)
+    return msg
+
 @bot.message_handler(commands=['start'])
 def start_command(message):
+    # Foydalanuvchi yuborgan buyruq xabarini o'chirib tashlaymiz
+    try:
+        bot.delete_message(message.chat.id, message.message_id)
+    except:
+        pass
+
     welcome_text = (
         f"🌸 *Welcome to Yukio Hub | Software Service* 🌸\n\n"
-        f"Salom, {message.from_user.first_name}!\n"
-        f"Bu yerda siz Yukio Hub sayti uchun Premium Kalit (Key) olishingiz mumkin.\n\n"
-        f"Premium kalit yordamida siz eng yuqori darajadagi scriptlarni qulfdan ochasiz."
+        f"Hello, {message.from_user.first_name}!\n"
+        f"Get your Premium License Keys and unlock high-tier script modules execution.\n\n"
+        f"💬 *To get the Premium Key, please send the special verification code:* `449`"
     )
     
     markup = types.InlineKeyboardMarkup(row_width=1)
-    btn_buy = types.InlineKeyboardButton("✨ Premium Key Olish (Tekin)", callback_data="get_key")
-    btn_site = types.InlineKeyboardButton("🌐 Saytga Kirish", url=SAYT_LINKI)
+    btn_site = types.InlineKeyboardButton("🌐 Access Official Website", url=SAYT_LINKI)
+    markup.add(btn_site)
     
-    markup.add(btn_buy, btn_site)
-    bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown", reply_markup=markup)
+    send_clean_message(message.chat.id, welcome_text, reply_markup=markup)
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-    if call.data == "get_key":
-        key_text = (
-            f"🔑 *Sizning Premium litsenziya kalitingiz:*\n\n"
+# Maxsus "449" kodini tekshirish matnli xabarlar uchun
+@bot.message_handler(func=lambda message: True)
+def handle_text_messages(message):
+    chat_id = message.chat.id
+    user_input = message.text.strip()
+
+    # Foydalanuvchi yozgan xabarni darhol o'chiramiz (chat toza turishi uchun)
+    try:
+        bot.delete_message(chat_id, message.message_id)
+    except:
+        pass
+
+    # Kodni tekshirish (Agar 449 yoki *** kabi yulduzchalar bo'lsa ham)
+    if user_input == "449" or "449" in user_input:
+        success_text = (
+            f"✨ *Premium Authorization Granted!* ✨\n\n"
+            f"🔑 *Your Premium License Key:*\n"
             f"`{PREMIUM_KEY}`\n\n"
-            f"📌 *Uni qanday ishlatasiz?*\n"
-            f"1. Saytga kiring.\n"
-            f"2. *Premium* bo'limiga o'ting.\n"
-            f"3. Kalitni kiriting va *Verify Authorization* tugmasini bosing."
+            f"📌 *How to use it?*\n"
+            f"1. Open our official website.\n"
+            f"2. Navigate to the *Premium* sector.\n"
+            f"3. Paste the key above and click *Verify Authorization*."
         )
-        bot.edit_message_text(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            text=key_text,
-            parse_mode="Markdown",
-            reply_markup=types.InlineKeyboardMarkup().add(
-                types.InlineKeyboardButton("🌐 Saytga o'tish", url=SAYT_LINKI)
-            )
+        markup = types.InlineKeyboardMarkup().add(
+            types.InlineKeyboardButton("🌐 Open Website", url=SAYT_LINKI)
         )
+        send_clean_message(chat_id, success_text, reply_markup=markup)
+    else:
+        # Noto'g'ri kod kiritilganda inglizcha ogohlantirish
+        error_text = (
+            f"❌ *Invalid Access Code!*\n\n"
+            f"The code you entered is incorrect. Please send the valid code (`449`) to claim your Premium Key."
+        )
+        send_clean_message(chat_id, error_text)
 
 if __name__ == "__main__":
-    # 1. Birinchi bo'lib Render kutayotgan Web-serverni yoqamiz
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
     
-    print("Web server muvaffaqiyatli portni egalladi. Bot ishga tushmoqda...")
-    
-    # 2. Keyin botni cheksiz aylanmaga qo'yamiz
+    print("Web server secure. Bot starting polling...")
     bot.infinity_polling(none_stop=True)
