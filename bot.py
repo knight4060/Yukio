@@ -3,7 +3,7 @@ import telebot
 from telebot import types
 
 # Tokenni xavfsiz saqlash uchun GitHub Secrets-dan olamiz
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+BOT_TOKEN = os.environ.get('8672811538:AAHpljd5gT0NgC2U606C9skBpplVWaty0qw')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 PREMIUM_KEY = "YUKIO-JDSA-11NI-ADKP-MOAS-7777"
