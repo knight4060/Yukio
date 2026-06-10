@@ -1,14 +1,14 @@
 import os
 import telebot
 from telebot import types
+import time
 
-# Tokenni xavfsiz saqlash uchun GitHub Secrets-dan olamiz
+# Tokenni GitHub Secrets-dan olamiz
 BOT_TOKEN = os.environ.get('8672811538:AAHpljd5gT0NgC2U606C9skBpplVWaty0qw')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 PREMIUM_KEY = "YUKIO-JDSA-11NI-ADKP-MOAS-7777"
-# BU YERGA TEPADA GITHUB PAGES BERGAN SAYTINGIZ LINKINI QO'YING
-SAYT_LINKI = "https://o_zingizning_github_username.github.io/yukio-hub/" 
+SAYT_LINKI = "https://knight4060.github.io/website-/" 
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -47,5 +47,11 @@ def callback_inline(call):
             )
         )
 
-# GitHub Actions to'xtab qolmasligi uchun infinity_polling ishlatamiz
-bot.infinity_polling(timeout=10, long_polling_timeout=5)
+# GITHUB ACTIONS TO'XTAB QOLMASLIGI UCHUN MUSTAHKAM POLLING AYLANMASI
+while True:
+    try:
+        print("Bot ishlamoqda...")
+        bot.polling(none_stop=True, interval=2, timeout=20)
+    except Exception as e:
+        print(f"Xatolik yuz berdi: {e}. 5 soniyadan keyin qayta urunib ko'riladi...")
+        time.sleep(5)
