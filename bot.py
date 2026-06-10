@@ -1,14 +1,25 @@
 import os
 import telebot
 from telebot import types
-import time
+from flask import Flask
+import threading
 
-# Tokenni GitHub Secrets-dan olamiz
+# Tokenni Render orqali xavfsiz ulaymiz
 BOT_TOKEN = os.environ.get('8672811538:AAHpljd5gT0NgC2U606C9skBpplVWaty0qw')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 PREMIUM_KEY = "YUKIO-JDSA-11NI-ADKP-MOAS-7777"
 SAYT_LINKI = "https://knight4060.github.io/website-/" 
+
+# Render o'chirib qo'ymasligi uchun soxta veb-server yaratamiz
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot 24/7 rejimda muvaffaqiyatli ishlamoqda!"
+
+def run_flask():
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -47,11 +58,10 @@ def callback_inline(call):
             )
         )
 
-# GITHUB ACTIONS TO'XTAB QOLMASLIGI UCHUN MUSTAHKAM POLLING AYLANMASI
-while True:
-    try:
-        print("Bot ishlamoqda...")
-        bot.polling(none_stop=True, interval=2, timeout=20)
-    except Exception as e:
-        print(f"Xatolik yuz berdi: {e}. 5 soniyadan keyin qayta urunib ko'riladi...")
-        time.sleep(5)
+# Botni alohida oqimda (thread) ishga tushiramiz
+if __name__ == "__main__":
+    t = threading.Thread(target=run_flask)
+    t.start()
+    
+    print("Yukio Bot ishga tushdi...")
+    bot.infinity_polling(none_stop=True)
